@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Produtos por Categoria – Vivara</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&family=Syne:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- Data Studio Community Viz SDK -->
+<script src="https://apis.google.com/js/platform.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@google/dscc@0.3.15/dist/dscc.min.js"></script>
+
+<style>
+  /* ── TOKENS ──────────────────────────────────────────────── */
+  :root {
+    --rosé:       #C4956A;
+    --rosé-light: #E8D5C0;
+    --cream:      #FAF7F4;
+    --stone:      #F0EBE4;
+    --ink:        #2C2420;
+    --muted:      #8C7B72;
+    --gold:       #B8924A;
+    --bg:         #FFFFFF;
+
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-ui:      'Syne', sans-serif;
+    --font-data:    'DM Mono', monospace;
+
+    --radius:  10px;
+    --gap:     16px;
+    --card-w:  200px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ── HEADER ──────────────────────────────────────────────── */
+  .viz-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rosé-light);
+  }
+
+  .viz-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+
+  .viz-subtitle {
+    font-family: var(--font-data);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── CATEGORY BLOCK ──────────────────────────────────────── */
+  .category-block {
+    margin-bottom: 32px;
+  }
+
+  .category-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rosé);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .category-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--stone);
+  }
+
+  /* ── PRODUCT GRID ────────────────────────────────────────── */
+  .product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap);
+  }
+
+  .product-card {
+    width: var(--card-w);
+    background: var(--cream);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    cursor: default;
+  }
+
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(44,36,32,0.10);
+  }
+
+  /* rank badge */
+  .rank-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-data);
+    font-size: 11px;
+    font-weight: 400;
+    z-index: 2;
+    backdrop-filter: blur(6px);
+  }
+
+  .rank-1 { background: var(--gold); color: #fff; }
+  .rank-2 { background: #A8A8A8; color: #fff; }
+  .rank-3 { background: #B07B54; color: #fff; }
+  .rank-other { background: rgba(255,255,255,0.85); color: var(--muted); border: 1px solid var(--stone); }
+
+  /* product image */
+  .product-img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--stone);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s;
+  }
+
+  .product-img.loading { opacity: 0; }
+  .product-img.loaded  { opacity: 1; }
+
+  .img-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--rosé-light);
+  }
+
+  .img-placeholder svg { width: 32px; height: 32px; }
+
+  /* card body */
+  .product-body {
+    padding: 12px 14px 14px;
+  }
+
+  .product-name {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--ink);
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .metric-label {
+    font-family: var(--font-data);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .metric-value {
+    font-family: var(--font-data);
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .metric-value.highlight {
+    color: var(--rosé);
+    font-size: 13px;
+  }
+
+  /* revenue bar */
+  .revenue-bar-wrap {
+    margin-top: 10px;
+    height: 3px;
+    background: var(--stone);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .revenue-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rosé-light), var(--rosé));
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  /* ── LOADING / EMPTY ─────────────────────────────────────── */
+  .state-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    gap: 12px;
+    color: var(--muted);
+    font-family: var(--font-data);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--stone);
+    border-top-color: var(--rosé);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── FOOTER ──────────────────────────────────────────────── */
+  .viz-footer {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--stone);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-text {
+    font-family: var(--font-data);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-brand {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--rosé);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div id="viz-root">
+  <div class="state-msg">
+    <div class="spinner"></div>
+    <span>carregando dados...</span>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG — ajuste conforme seu ambiente VTEX
+   ═══════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  // Domínio da sua loja VTEX (usado para buscar imagens do catálogo)
+  vtexAccount: 'vivara',            // ← substitua se necessário
+  vtexEnvironment: 'vtexcommercestable',
+
+  // Quantos produtos mostrar por categoria
+  topN: 5,
+
+  // Formatação de moeda
+  currency: 'BRL',
+  locale: 'pt-BR',
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function formatBRL(val) {
+  return new Intl.NumberFormat(CONFIG.locale, {
+    style: 'currency',
+    currency: CONFIG.currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(val || 0);
+}
+
+function formatQty(val) {
+  return new Intl.NumberFormat(CONFIG.locale).format(val || 0);
+}
+
+/* Busca a URL da imagem principal do produto via API pública de catálogo VTEX */
+async function fetchProductImage(productId) {
+  if (!productId) return null;
+  try {
+    const url = `https://${CONFIG.vtexAccount}.${CONFIG.vtexEnvironment}.com/api/catalog_system/pub/products/search?fq=productId:${productId}&_from=0&_to=0`;
+    const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && data[0] && data[0].items && data[0].items[0] && data[0].items[0].images) {
+      return data[0].items[0].images[0]?.imageUrl || null;
+    }
+  } catch (e) { /* silent fail */ }
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD CARD
+   ═══════════════════════════════════════════════════════════════ */
+function buildCard(product, rank, maxRevenue) {
+  const pct = maxRevenue > 0 ? Math.round((product.revenue / maxRevenue) * 100) : 0;
+
+  const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  card.dataset.productId = product.productId || '';
+
+  card.innerHTML = `
+    <span class="rank-badge ${badgeClass}">${rank}</span>
+    <div class="product-img-wrap">
+      <div class="img-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+      </div>
+    </div>
+    <div class="product-body">
+      <div class="product-name" title="${product.name}">${product.name}</div>
+      <div class="product-metrics">
+        <div class="metric-row">
+          <span class="metric-label">Receita</span>
+          <span class="metric-value highlight">${formatBRL(product.revenue)}</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Pedidos</span>
+          <span class="metric-value">${formatQty(product.orders)}</span>
+        </div>
+        ${product.qty != null ? `
+        <div class="metric-row">
+          <span class="metric-label">Unidades</span>
+          <span class="metric-value">${formatQty(product.qty)}</span>
+        </div>` : ''}
+      </div>
+      <div class="revenue-bar-wrap">
+        <div class="revenue-bar-fill" style="width: ${pct}%"></div>
+      </div>
+    </div>
+  `;
+
+  /* Lazy-load da imagem via VTEX Catalog API */
+  if (product.imageUrl) {
+    injectImage(card, product.imageUrl);
+  } else if (product.productId) {
+    fetchProductImage(product.productId).then(url => {
+      if (url) injectImage(card, url);
+    });
+  }
+
+  return card;
+}
+
+function injectImage(card, url) {
+  const wrap = card.querySelector('.product-img-wrap');
+  const img = document.createElement('img');
+  img.className = 'product-img loading';
+  img.alt = '';
+  img.src = url;
+  img.onload  = () => img.classList.replace('loading', 'loaded');
+  img.onerror = () => img.remove();
+  wrap.innerHTML = '';
+  wrap.appendChild(img);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════════════════ */
+function render(rows, fields, style) {
+  const root = document.getElementById('viz-root');
+  root.innerHTML = '';
+
+  if (!rows || rows.length === 0) {
+    root.innerHTML = '<div class="state-msg"><span>Sem dados para exibir</span></div>';
+    return;
+  }
+
+  /* ── Identifica índices das colunas pelo nome do campo ── */
+  const idx = {};
+  fields.forEach((f, i) => {
+    const n = (f.name || f.id || '').toLowerCase();
+    if (n.includes('categor'))        idx.category  = i;
+    else if (n.includes('produto') || n.includes('product') || n.includes('nome')) idx.name = i;
+    else if (n.includes('receita') || n.includes('revenue') || n.includes('valor')) idx.revenue = i;
+    else if (n.includes('pedido') || n.includes('order'))                            idx.orders  = i;
+    else if (n.includes('unidade') || n.includes('qty') || n.includes('quantity'))  idx.qty     = i;
+    else if (n.includes('productid') || n.includes('produto_id'))                   idx.productId = i;
+    else if (n.includes('imagem') || n.includes('image') || n.includes('foto'))     idx.imageUrl = i;
+  });
+
+  /* ── Agrupa por categoria ── */
+  const byCategory = {};
+  rows.forEach(row => {
+    const cat  = idx.category  != null ? row[idx.category]  : 'Geral';
+    const name = idx.name      != null ? row[idx.name]      : '—';
+    const rev  = idx.revenue   != null ? Number(row[idx.revenue])  || 0 : 0;
+    const ord  = idx.orders    != null ? Number(row[idx.orders])   || 0 : 0;
+    const qty  = idx.qty       != null ? Number(row[idx.qty])      || 0 : null;
+    const pid  = idx.productId != null ? row[idx.productId] : null;
+    const img  = idx.imageUrl  != null ? row[idx.imageUrl]  : null;
+
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push({ name, revenue: rev, orders: ord, qty, productId: pid, imageUrl: img });
+  });
+
+  /* ── Header ── */
+  const header = document.createElement('div');
+  header.className = 'viz-header';
+  header.innerHTML = `
+    <span class="viz-title">Top Produtos por Categoria</span>
+    <span class="viz-subtitle">${Object.keys(byCategory).length} categorias · top ${CONFIG.topN}</span>
+  `;
+  root.appendChild(header);
+
+  /* ── Category blocks ── */
+  const sortedCats = Object.keys(byCategory).sort();
+
+  sortedCats.forEach(cat => {
+    const products = byCategory[cat]
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, CONFIG.topN);
+
+    const maxRev = products[0]?.revenue || 1;
+
+    const block = document.createElement('div');
+    block.className = 'category-block';
+
+    const label = document.createElement('div');
+    label.className = 'category-label';
+    label.textContent = cat;
+    block.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'product-grid';
+
+    products.forEach((p, i) => {
+      grid.appendChild(buildCard(p, i + 1, maxRev));
+    });
+
+    block.appendChild(grid);
+    root.appendChild(block);
+  });
+
+  /* ── Footer ── */
+  const footer = document.createElement('div');
+  footer.className = 'viz-footer';
+  footer.innerHTML = `
+    <span class="footer-text">atualizado via VTEX Orders API</span>
+    <span class="footer-brand">Vivara</span>
+  `;
+  root.appendChild(footer);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA STUDIO INTEGRATION
+   ═══════════════════════════════════════════════════════════════ */
+function drawViz(data) {
+  try {
+    const tables = data.tables;
+    const style  = data.style || {};
+
+    /* Suporte a DEFAULT e SUMMARY table */
+    const tableKey = tables.DEFAULT ? 'DEFAULT' : Object.keys(tables)[0];
+    if (!tableKey) {
+      document.getElementById('viz-root').innerHTML =
+        '<div class="state-msg"><span>Nenhuma tabela recebida</span></div>';
+      return;
+    }
+
+    const table = tables[tableKey];
+    render(table.rows, table.headers, style);
+  } catch (err) {
+    document.getElementById('viz-root').innerHTML =
+      `<div class="state-msg"><span>Erro ao renderizar: ${err.message}</span></div>`;
+    console.error('Viz render error:', err);
+  }
+}
+
+/* ─── Registra callback no SDK do Looker Studio ─── */
+if (typeof dscc !== 'undefined') {
+  dscc.subscribeToData(drawViz, { transform: dscc.objectTransform });
+} else {
+  /* ─── MODO PREVIEW (fora do Looker Studio) ─── */
+  console.warn('dscc não encontrado — rodando com dados de exemplo');
+  drawViz({
+    tables: {
+      DEFAULT: {
+        headers: [
+          { name: 'categoria',  id: 'categoria'  },
+          { name: 'produto',    id: 'produto'     },
+          { name: 'receita',    id: 'receita'     },
+          { name: 'pedidos',    id: 'pedidos'     },
+          { name: 'unidades',   id: 'unidades'    },
+          { name: 'productId',  id: 'productId'   },
+        ],
+        rows: [
+          ['Alianças',   'Aliança Ouro 18k Diamante', 28450, 87, 91,  '12345'],
+          ['Alianças',   'Aliança Ouro Branco 18k',   19200, 63, 68,  '12346'],
+          ['Alianças',   'Aliança Ouro Rosé Diamante', 15300, 48, 52, '12347'],
+          ['Alianças',   'Aliança Solitário 18k',     12100, 39, 42,  '12348'],
+          ['Alianças',   'Aliança Prata 925',          8700, 31, 34,  '12349'],
+
+          ['Colares',    'Colar Veneziana Ouro 18k',  22100, 74, 78,  '22001'],
+          ['Colares',    'Colar Gota Zircônia',       17500, 58, 61,  '22002'],
+          ['Colares',    'Colar Coração Diamante',    14200, 47, 50,  '22003'],
+          ['Colares',    'Colar Elo Retorcido',        9800, 33, 36,  '22004'],
+          ['Colares',    'Colar Lua Ouro Rosé',        7400, 25, 27,  '22005'],
+
+          ['Brincos',    'Brinco Argola Ouro 18k',   19800, 68, 73,  '33001'],
+          ['Brincos',    'Brinco Ponto de Luz',       16300, 55, 60,  '33002'],
+          ['Brincos',    'Brinco Ear Cuff Diamante',  11200, 37, 41,  '33003'],
+          ['Brincos',    'Brinco Hoop Rosé',           8100, 28, 31,  '33004'],
+          ['Brincos',    'Brinco Bola Ouro 18k',       6500, 22, 24,  '33005'],
+
+          ['Pulseiras',  'Pulseira Riviera Diamante', 31200, 92, 98,  '44001'],
+          ['Pulseiras',  'Pulseira Elo Ouro 18k',     18600, 61, 65,  '44002'],
+          ['Pulseiras',  'Pulseira Berloque Prata',   13400, 44, 47,  '44003'],
+          ['Pulseiras',  'Pulseira Tennis Zircônia',   9200, 31, 34,  '44004'],
+          ['Pulseiras',  'Pulseira Rígida Ouro',       6900, 23, 25,  '44005'],
+        ],
+      },
+    },
+    style: {},
+  });
+}
+</script>
+
+</body>
+</html>
