@@ -3,7 +3,7 @@
   "logoUrl": "https://dayanesalomao97.github.io/vivara/vivara-top-produtos-categoria.html",
   "organizationName": "Vivara",
   "description": "Top produtos por categoria com fotos da VTEX",
-  "devMode": false,
+  "devMode": true,
   "components": [{
     "id": "top-produtos",
     "name": "Top Produtos por Categoria",
