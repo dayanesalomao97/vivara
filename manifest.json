@@ -1,61 +1,17 @@
 {
   "name": "Top Produtos por Categoria",
-  "logoUrl": "https://dayanesalomao97.github.io/vivara/vivara-top-produtos-categoria.html",
+  "logoUrl": "https://www.google.com/imgres?q=vivara%20logo&imgurl=https%3A%2F%2Flogospng.org%2Fdownload%2Fvivara%2Flogo-vivara-4096.png&imgrefurl=https%3A%2F%2Flogospng.org%2Flogo-vivara%2F&docid=nR9oPw0YOKLBmM&tbnid=SIdogIaiz75oGM&vet=12ahUKEwi5y4D5h6WVAxUmqpUCHRBwMscQnPAOegQIMRAA..i&w=4096&h=4096&hcb=2&ved=2ahUKEwi5y4D5h6WVAxUmqpUCHRBwMscQnPAOegQIMRAA",  // trocar pelo logo
   "organizationName": "Vivara",
   "description": "Top produtos por categoria com fotos da VTEX",
   "devMode": true,
   "components": [{
     "id": "top-produtos",
     "name": "Top Produtos por Categoria",
-    "description": "Exibe top produtos agrupados por categoria com fotos da VTEX",
-    "iconUrl": "https://dayanesalomao97.github.io/vivara/vivara-top-produtos-categoria.html",
+    "iconUrl": "https://www.google.com/imgres?q=vivara%20logo&imgurl=https%3A%2F%2Flogospng.org%2Fdownload%2Fvivara%2Flogo-vivara-4096.png&imgrefurl=https%3A%2F%2Flogospng.org%2Flogo-vivara%2F&docid=nR9oPw0YOKLBmM&tbnid=SIdogIaiz75oGM&vet=12ahUKEwi5y4D5h6WVAxUmqpUCHRBwMscQnPAOegQIMRAA..i&w=4096&h=4096&hcb=2&ved=2ahUKEwi5y4D5h6WVAxUmqpUCHRBwMscQnPAOegQIMRAA",  // trocar por ícone
     "resource": {
       "js": "https://dayanesalomao97.github.io/vivara/vivara-top-produtos-categoria.html"
+      // ou mover o código JS para um arquivo .js separado
     },
-    "data": [
-      {
-        "id": "concepts",
-        "label": "Dados",
-        "elements": [
-          {
-            "id": "categoria",
-            "label": "Categoria",
-            "type": "DIMENSION",
-            "options": { "min": 1, "max": 1 }
-          },
-          {
-            "id": "produto",
-            "label": "Produto",
-            "type": "DIMENSION",
-            "options": { "min": 1, "max": 1 }
-          },
-          {
-            "id": "productId",
-            "label": "Product ID",
-            "type": "DIMENSION",
-            "options": { "min": 1, "max": 1 }
-          },
-          {
-            "id": "imageUrl",
-            "label": "Imagem URL",
-            "type": "DIMENSION",
-            "options": { "min": 0, "max": 1 }
-          },
-          {
-            "id": "receita",
-            "label": "Receita",
-            "type": "METRIC",
-            "options": { "min": 1, "max": 1 }
-          },
-          {
-            "id": "unidades",
-            "label": "Unidades",
-            "type": "METRIC",
-            "options": { "min": 0, "max": 1 }
-          }
-        ]
-      }
-    ],
-    "style": []
+    ...
   }]
 }
