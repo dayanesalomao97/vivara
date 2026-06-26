@@ -427,29 +427,38 @@ function render(rows, fields, style) {
     return;
   }
 
+  /* ── Helper: extrai valor de célula (dscc objectTransform retorna {value:...}) ── */
+  function cellVal(row, i) {
+    if (i == null) return null;
+    const v = row[i];
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'object' && v !== null && 'value' in v) return v.value;
+    return v;
+  }
+
   /* ── Identifica índices das colunas pelo nome do campo ── */
   const idx = {};
   fields.forEach((f, i) => {
-    const n = (f.name || f.id || '').toLowerCase();
-    if (n.includes('categor'))        idx.category  = i;
-    else if (n.includes('produto') || n.includes('product') || n.includes('nome')) idx.name = i;
-    else if (n.includes('receita') || n.includes('revenue') || n.includes('valor')) idx.revenue = i;
-    else if (n.includes('pedido') || n.includes('order'))                            idx.orders  = i;
-    else if (n.includes('unidade') || n.includes('qty') || n.includes('quantity'))  idx.qty     = i;
-    else if (n.includes('productid') || n.includes('produto_id'))                   idx.productId = i;
-    else if (n.includes('imagem') || n.includes('image') || n.includes('foto'))     idx.imageUrl = i;
+    const n = (f.name || f.id || f.concept || '').toLowerCase();
+    if      (n.includes('imageurl') || n.includes('imagem') || n.includes('image') || n.includes('foto')) idx.imageUrl = i;
+    else if (n.includes('categor'))                                                   idx.category  = i;
+    else if (n.includes('produto') || n.includes('product') || n.includes('nome'))   idx.name      = i;
+    else if (n.includes('receita') || n.includes('revenue') || n.includes('valor'))  idx.revenue   = i;
+    else if (n.includes('pedido') || n.includes('order'))                             idx.orders    = i;
+    else if (n.includes('unidade') || n.includes('qty') || n.includes('quantity'))   idx.qty       = i;
+    else if (n.includes('productid') || n.includes('produto_id'))                    idx.productId = i;
   });
 
   /* ── Agrupa por categoria ── */
   const byCategory = {};
   rows.forEach(row => {
-    const cat  = idx.category  != null ? row[idx.category]  : 'Geral';
-    const name = idx.name      != null ? row[idx.name]      : '—';
-    const rev  = idx.revenue   != null ? Number(row[idx.revenue])  || 0 : 0;
-    const ord  = idx.orders    != null ? Number(row[idx.orders])   || 0 : 0;
-    const qty  = idx.qty       != null ? Number(row[idx.qty])      || 0 : null;
-    const pid  = idx.productId != null ? row[idx.productId] : null;
-    const img  = idx.imageUrl  != null ? row[idx.imageUrl]  : null;
+    const cat  = cellVal(row, idx.category)  || 'Geral';
+    const name = cellVal(row, idx.name)      || '—';
+    const rev  = Number(cellVal(row, idx.revenue))  || 0;
+    const ord  = Number(cellVal(row, idx.orders))   || 0;
+    const qty  = idx.qty != null ? Number(cellVal(row, idx.qty)) || 0 : null;
+    const pid  = cellVal(row, idx.productId) || null;
+    const img  = cellVal(row, idx.imageUrl)  || null;
 
     if (!byCategory[cat]) byCategory[cat] = [];
     byCategory[cat].push({ name, revenue: rev, orders: ord, qty, productId: pid, imageUrl: img });
